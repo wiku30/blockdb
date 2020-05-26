@@ -8,6 +8,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FileReader;
 import java.util.Scanner;
+
+import javax.lang.model.util.ElementScanner6;
+
 import java.io.IOException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -207,9 +210,34 @@ public class DatabaseEngine {
     }
 
 
-    private void simulate_Tx(Tx tx)
+    private int simulate_Tx(Tx tx)
     {
-
+        String t = tx.Type;
+        if(t=="GET")
+        {
+            return get(tx.UserID);
+        }
+        else if(t=="PUT")
+        {
+            put(tx.UserID,tx.Value);
+        }
+        else if(t=="DEPOSIT")
+        {
+            deposit(tx.UserID,tx.Value);
+        }
+        else if(t=="WITHDRAW")
+        {
+            withdraw(tx.UserID,tx.Value);
+        }
+        else if(t=="TRANSFER")
+        {
+            transfer(tx.FromID,tx.ToID,tx.Value);
+        }
+        else
+        {
+            System.out.println("Invalid Transaction Simulation: " + t);
+        }
+        return 0;
     }
 
     private void writeLog(Tx tx)
