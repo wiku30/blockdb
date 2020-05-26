@@ -177,14 +177,33 @@ public class DatabaseEngine {
             }
             catch(Exception e)
             {
-                System.out.println("Fuck!");
+                System.out.println("Corrupted block!");
             }
         }
     }
 
     private void recover_from_log()
     {
-
+        try
+        {
+            Scanner fr = new Scanner(logPath);
+            while(fr.hasNext())
+            {
+                int tp = fr.nextInt();
+                String Tp = fr.next();
+                String UI = fr.next();
+                String FI = fr.next();
+                String TI = fr.next();
+                int V = fr.nextInt();
+                long R = fr.nextLong();
+                Tx tx = new Tx(Tp,UI,FI,TI,V,R);
+                simulate_Tx(tx);
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println("Corrupted log!");
+        }
     }
 
 
@@ -224,7 +243,7 @@ public class DatabaseEngine {
         for(int i=0;i<N;i++)
         {
             int tp = fr.nextInt();
-            int Tp = fr.nextInt();
+            String Tp = fr.next();
             String UI = fr.next();
             String FI = fr.next();
             String TI = fr.next();
