@@ -9,6 +9,12 @@ import java.io.FileWriter;
 import java.io.FileReader;
 import java.util.Scanner;
 import java.io.IOException;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import java.util.List;
+import java.lang.Iterable;
+import java.util.Iterator;
 
 public class DatabaseEngine {
     private static DatabaseEngine instance = null;
@@ -40,14 +46,22 @@ public class DatabaseEngine {
 
         //Todo: recovery. Now assume clean start 
 
-        try
+        if(isCleanStart())
         {
-            fw = new FileWriter(logPath, false);
+            try
+            {
+                fw = new FileWriter(logPath, false);
+            }
+            catch(Exception e)
+            {
+                System.out.println("Fuck!");
+            }
         }
-        catch(Exception e)
+        else
         {
-            System.out.println("Fuck!");
+            recover();
         }
+
         
 
     }
@@ -61,6 +75,16 @@ public class DatabaseEngine {
         public int Value;
         public int type;
         public long Random;
+        Tx(String Type, String UserID, String FromID, String ToID, int Value, long Random)
+        {
+            type=3;
+            this.Type=Type;
+            this.UserID=UserID;
+            this.FromID=FromID;
+            this.ToID=ToID;
+            this.Value=Value;
+            this.Random = Random;
+        }
         Tx(String Type, String UserID, int Value, long Random)
         {
             type=1;
@@ -91,6 +115,82 @@ public class DatabaseEngine {
             this.Value=0;
             this.Random = Random;
         }
+    }
+
+    private boolean isCleanStart()
+    {
+        File _log = new File(logPath);
+        File _block = new File(dataDir + "1" + ".json");
+        if(_log.exists() || _block.exists())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    private void recover() //assume blocks or log exist
+    {
+        int MAX = 114514;
+        for(int i=0;i<MAX;i++)
+        {
+            File tmp = new File(dataDir + (i+1) + ".json");
+            if(!tmp.exists())
+            {
+                numBlocks = i;
+                break;
+            }
+        }
+        recover_from_blocks();
+        recover_from_log();
+    }
+
+    private void recover_from_blocks()
+    {
+        for(int i=1;i<=numBlocks;i++)
+        {
+            File f = new File(dataDir + (i) + ".json");
+            Scanner scanner = null;
+            try
+            {
+                scanner = new Scanner(f);
+                String str = null; //full json
+                while(scanner.hasNextLine())
+                {
+                    str += scanner.nextLine()+"\n";
+                }
+                JSONObject jo = JSONObject.parseObject(str);
+                JSONArray trans = jo.getJSONArray("Transactions");
+                Iterator<Object> it = trans.iterator();
+
+                while(it.hasNext())
+                {
+                    JSONObject obj = (JSONObject) it.next();
+                    String tp = obj.getString("Type");
+                    String ui = obj.getString("UserID");
+                    String fi = obj.getString("FromID");
+                    String ti = obj.getString("ToID");
+                    int v = obj.getIntValue("Value");
+                    long r = obj.getLongValue("TxID");
+                    Tx tx = new Tx(tp,ui,fi,ti,v,r);
+                    simulate_Tx(tx);
+                }
+            }
+            catch(Exception e)
+            {
+                System.out.println("Fuck!");
+            }
+        }
+    }
+
+    private void recover_from_log()
+    {
+
+    }
+
+
+    private void simulate_Tx(Tx tx)
+    {
+
     }
 
     private void writeLog(Tx tx)
