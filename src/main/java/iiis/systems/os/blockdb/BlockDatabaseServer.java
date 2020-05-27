@@ -48,6 +48,16 @@ public class BlockDatabaseServer {
 
         DatabaseEngine.setup(dataDir);
 
+        for(int i=0;i<100;i++)
+        {
+            DatabaseEngine.getInstance().deposit("43964396", 100);
+            //DatabaseEngine.getInstance().withdraw("43964396", 70);
+            DatabaseEngine.getInstance().transfer("43964396","Cardioid", 70);
+            DatabaseEngine.getInstance().transfer("43964396","Cardioid", 70);
+            System.out.println(DatabaseEngine.getInstance().get("Cardioid"));
+        }
+        
+
         final BlockDatabaseServer server = new BlockDatabaseServer();
         server.start(address, port);
         server.blockUntilShutdown();
