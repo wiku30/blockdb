@@ -19,6 +19,9 @@ import java.util.List;
 import java.lang.Iterable;
 import java.util.Iterator;
 
+
+import java.util.*;
+
 public class DatabaseEngine {
     private static DatabaseEngine instance = null;
 
@@ -42,6 +45,9 @@ public class DatabaseEngine {
     private String dataDir;
     private FileWriter fw;
     private File fll;
+
+
+    private int lock = 0;
 
     private long counter=0;
 
@@ -247,6 +253,28 @@ public class DatabaseEngine {
         }
     }
 
+    private void P()
+    {
+        try
+        {
+            while(lock==1) //just busy waiting, not prohibited...
+            {
+                Thread.sleep(5); //5ms
+            }
+            
+        }
+        catch(Exception e)
+        {
+            System.out.println("I don't know why error can appear here");
+        }
+        lock=1;
+        
+    }
+
+    private void V()
+    {
+        lock=0;
+    }
 
     private int simulate_Tx(Tx tx)
     {
@@ -403,6 +431,7 @@ public class DatabaseEngine {
     }
 
     public boolean put(String userId, int value) {
+        P();
         if(recovery_completed)
         {
             logLength++;
@@ -412,10 +441,12 @@ public class DatabaseEngine {
         writeLog(tmp);
         balances.put(userId, value);
         check();
+        V();
         return true;
     }
 
     public boolean deposit(String userId, int value) {
+        P();
         if(recovery_completed)
         {
             logLength++;
@@ -425,16 +456,17 @@ public class DatabaseEngine {
         int balance = getOrZero(userId);
         balances.put(userId, balance + value);
         check();
+        V();
         return true;
     }
 
 
     public boolean withdraw(String userId, int value) {
-
         int balance = getOrZero(userId);
         long rnd = getRandom();
         if(balance >= value)
         {
+            P();
             if(recovery_completed)
             {
                 logLength++;
@@ -443,6 +475,7 @@ public class DatabaseEngine {
             writeLog(new Tx("WITHDRAW",userId,value,rnd));
             balances.put(userId, balance - value);
             check();
+            V();
             return true;
         }
         else
@@ -464,6 +497,7 @@ public class DatabaseEngine {
         }
         else if(fromBalance >= value)
         {
+            P();
             if(recovery_completed)
             {
                 logLength++;
@@ -473,6 +507,7 @@ public class DatabaseEngine {
             balances.put(fromId, fromBalance - value);
             balances.put(toId, toBalance + value);
             check();
+            V();
             return true;
         }
         else

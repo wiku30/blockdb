@@ -9,6 +9,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+
+import java.util.*;
+
+
 public class BlockDatabaseServer {
     private Server server;
 
@@ -50,15 +54,16 @@ public class BlockDatabaseServer {
 
         for(int i=0;i<100;i++)
         {
-            DatabaseEngine.getInstance().deposit("43964396", 100);
-            //DatabaseEngine.getInstance().withdraw("43964396", 70);
+            DatabaseEngine.getInstance().deposit("43964396", 150);
+            DatabaseEngine.getInstance().withdraw("43964396", 50);
             DatabaseEngine.getInstance().transfer("43964396","Cardioid", 70);
-            DatabaseEngine.getInstance().transfer("43964396","Cardioid", 70);
+            DatabaseEngine.getInstance().transfer("43964396","Cardioid", 70); //To test integrity checking
             System.out.println(DatabaseEngine.getInstance().get("Cardioid"));
-        }
+        } //run this multiple times, the operations should append
         
 
         final BlockDatabaseServer server = new BlockDatabaseServer();
+        Thread.sleep(1000); //give enough time to recover data before serving
         server.start(address, port);
         server.blockUntilShutdown();
     }
